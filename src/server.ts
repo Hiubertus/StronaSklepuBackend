@@ -8,7 +8,7 @@ import {
     getItems,
     addReview,
     deleteReview,
-    getItemReviews
+    getItemReviews, getItem
 } from "./itemPG.model.js";
 
 import {
@@ -26,6 +26,8 @@ const port = 3000;
 
 appExpress.use(bodyParser.json());
 appExpress.use(cors());
+
+appExpress.get('/Item', getItem);
 
 appExpress.get('/Items', getItems);
 

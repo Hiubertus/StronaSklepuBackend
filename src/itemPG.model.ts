@@ -138,7 +138,31 @@ export async function deleteReview(req: Request, res: Response) {
         client.release();
     }
 }
+export async function getItem(req: Request, res: Response) {
+    const client: PoolClient = await pool.connect();
+    const item_id = Number(req.query.item_id);
 
+    if (!item_id) {
+        return res.status(400).json({ error: "Nie podano ID przedmiotu" });
+    }
+
+    try {
+        const query = 'SELECT * FROM items WHERE item_id = $1';
+        const { rows }: { rows: Item[] } = await client.query(query, [item_id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Przedmiot nie został znaleziony' });
+        }
+
+        const item: Item = rows[0];
+        return res.json(item);
+    } catch (err) {
+        console.error('Błąd podczas pobierania przedmiotu:', err);
+        return res.status(500).json({ error: 'Wystąpił błąd podczas pobierania przedmiotu' });
+    } finally {
+        client.release();
+    }
+}
 export async function getItemReviews(req: Request, res: Response) {
     const client: PoolClient = await pool.connect();
     const item_id = Number(req.query.item_id);
