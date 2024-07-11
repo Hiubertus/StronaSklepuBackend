@@ -72,7 +72,9 @@ export async function addReview(req: Request, res: Response) {
         client.release();
     }
 }
+export async function patchReview(req: Request, res: Response) {
 
+}
 export async function deleteReview(req: Request, res: Response) {
     const item_id: number = Number(req.query.item_id);
     const { user_id } = res.locals.token; // Dostęp do zdekodowanego tokena z res.locals
@@ -137,17 +139,29 @@ export async function deleteReview(req: Request, res: Response) {
     }
 }
 
-export async function getUserReview(req: Request, res: Response) {
+export async function getItemReviews(req: Request, res: Response) {
     const client: PoolClient = await pool.connect();
     const item_id = Number(req.query.item_id);
+    const filter = req.query.filter as string || 'date';
+    const sortOrder = req.query.sort as string || 'desc';
+    const limit = 4;
+    const offset = Number(req.query.offset) || 0;
     const { user_id } = res.locals.token;
 
-    if (!item_id || !user_id) {
-        return res.status(400).json({ error: "Nie podano wszystkich wymaganych danych" });
+    if (!item_id) {
+        return res.status(400).json({ error: "Nie podano ID przedmiotu" });
+    }
+
+    if (filter !== 'rate' && filter !== 'date') {
+        return res.status(400).json({ error: "Nieprawidłowy filtr. Użyj 'rate' lub 'date'." });
+    }
+
+    if (sortOrder !== 'asc' && sortOrder !== 'desc') {
+        return res.status(400).json({ error: "Nieprawidłowy sortOrder. Użyj 'asc' lub 'desc'." });
     }
 
     try {
-        const query = `
+        const userReviewQuery = `
             SELECT 
                 r.review_id,
                 r.user_id,
@@ -166,56 +180,7 @@ export async function getUserReview(req: Request, res: Response) {
             LIMIT 1
         `;
 
-        const { rows }: QueryResult<Review> = await client.query(query, [item_id, user_id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Recenzja nie została znaleziona' });
-        }
-
-        const review: Review = {
-            review_id: rows[0].review_id,
-            user_id: rows[0].user_id,
-            item_id: rows[0].item_id,
-            text: rows[0].text,
-            rate: rows[0].rate,
-            date: rows[0].date,
-            user_name: rows[0].user_name,
-            user_surname: rows[0].user_surname,
-        };
-
-        return res.json(review);
-    } catch (err) {
-        console.error('Błąd podczas pobierania recenzji użytkownika:', err);
-        return res.status(500).json({ error: 'Wystąpił błąd podczas pobierania recenzji użytkownika' });
-    } finally {
-        client.release();
-    }
-}
-
-
-export async function getItemReviews(req: Request, res: Response) {
-    const client: PoolClient = await pool.connect();
-    const item_id = Number(req.query.item_id);
-    const filter = req.query.filter as string || 'date';
-    const sortOrder = req.query.sort as string || 'desc';
-    const limit = 4;
-    const offset = Number(req.query.offset) || 0;
-    const user_id = req.query.user_id ? Number(req.query.user_id) : null;
-
-    if (!item_id) {
-        return res.status(400).json({ error: "Nie podano ID przedmiotu" });
-    }
-
-    if (filter !== 'rate' && filter !== 'date') {
-        return res.status(400).json({ error: "Nieprawidłowy filtr. Użyj 'rate' lub 'date'." });
-    }
-
-    if (sortOrder !== 'asc' && sortOrder !== 'desc') {
-        return res.status(400).json({ error: "Nieprawidłowy sortOrder. Użyj 'asc' lub 'desc'." });
-    }
-
-    try {
-        const query = `
+        const itemReviewsQuery = `
             SELECT 
                 r.review_id,
                 r.user_id,
@@ -238,10 +203,23 @@ export async function getItemReviews(req: Request, res: Response) {
             OFFSET $3
         `;
 
-        const queryParams = user_id ? [item_id, limit, offset, user_id] : [item_id, limit, offset];
-        const { rows }: QueryResult<Review> = await client.query(query, queryParams);
+        const userReviewPromise = user_id ? await client.query(userReviewQuery, [item_id, user_id]) : {rows: []};
+        const itemReviewsPromise = client.query(itemReviewsQuery, user_id ? [item_id, limit, offset, user_id] : [item_id, limit, offset]);
 
-        const reviews: Review[] = rows.map((row: any) => ({
+        const [userReviewResult, itemReviewsResult] = await Promise.all([userReviewPromise, itemReviewsPromise]);
+
+        const userReview: Review | null = userReviewResult.rows.length > 0 ? {
+            review_id: userReviewResult.rows[0].review_id,
+            user_id: userReviewResult.rows[0].user_id,
+            item_id: userReviewResult.rows[0].item_id,
+            text: userReviewResult.rows[0].text,
+            rate: userReviewResult.rows[0].rate,
+            date: userReviewResult.rows[0].date,
+            user_name: userReviewResult.rows[0].user_name,
+            user_surname: userReviewResult.rows[0].user_surname,
+        } : null;
+
+        const itemReviews: Review[] = itemReviewsResult.rows.map((row: any) => ({
             review_id: row.review_id,
             user_id: row.user_id,
             item_id: row.item_id,
@@ -252,7 +230,7 @@ export async function getItemReviews(req: Request, res: Response) {
             user_surname: row.user_surname,
         }));
 
-        return res.json(reviews);
+        return res.json({ userReview, itemReviews });
     } catch (err) {
         console.error('Błąd podczas pobierania recenzji:', err);
         return res.status(500).json({ error: 'Wystąpił błąd podczas pobierania recenzji' });
@@ -260,7 +238,6 @@ export async function getItemReviews(req: Request, res: Response) {
         client.release();
     }
 }
-
 
 export async function getItems(req: Request, res: Response) {
     const client: PoolClient = await pool.connect();

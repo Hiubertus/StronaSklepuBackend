@@ -3,10 +3,12 @@ import bodyParser from 'body-parser';
 import cors from 'cors'
 
 import {
-    getItemReviews,
+    // getItemReviews,
+    // getUserReview,
     getItems,
     addReview,
-    deleteReview, getUserReview
+    deleteReview,
+    getItemReviews
 } from "./itemPG.model.js";
 
 import {
@@ -17,7 +19,7 @@ import {
     patchUserData, getUser
 } from "./userPG.model.js";
 
-import {verifyToken} from "./server.functions.js";
+import {checkToken, verifyToken} from "./server.functions.js";
 
 const appExpress = express()
 const port = 3000;
@@ -27,9 +29,7 @@ appExpress.use(cors());
 
 appExpress.get('/Items', getItems);
 
-appExpress.get('/ItemReviews', getItemReviews);
-
-appExpress.get('/UserReview', verifyToken ,getUserReview);
+appExpress.get('/ItemReviews', checkToken, getItemReviews);
 
 appExpress.post('/registerUser', registerUser);
 

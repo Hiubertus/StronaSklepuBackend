@@ -20,3 +20,21 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
         return res.status(400).json({ success: false, message: 'Niepoprawny token.' });
     }
 }
+export function checkToken (req: Request, res: Response, next: NextFunction){
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        res.locals.token = { user_id: null };
+        return next();
+    }
+
+    jwt.verify(token, jwtSecret, (err, decoded) => {
+        if (err) {
+            res.locals.token = { user_id: null };
+            return next();
+        }
+
+        res.locals.token = decoded;
+        next();
+    });
+}
