@@ -8,7 +8,7 @@ import {
     getItems,
     addReview,
     deleteReview,
-    getItemReviews, getItem
+    getItemReviews, getItem, patchReview
 } from "./itemPG.model.js";
 
 import {
@@ -33,6 +33,8 @@ appExpress.get('/Items', getItems);
 
 appExpress.get('/ItemReviews', checkToken, getItemReviews);
 
+appExpress.get('/User', verifyToken, getUser)
+
 appExpress.post('/registerUser', registerUser);
 
 appExpress.post('/loginUser', loginUser);
@@ -41,9 +43,9 @@ appExpress.post('/Review', verifyToken, addReview);
 
 appExpress.delete("/Review", verifyToken, deleteReview)
 
-appExpress.get('/User', verifyToken, getUser)
-
 appExpress.delete('/User', verifyToken, deleteUser);
+
+appExpress.patch('/Review', verifyToken, patchReview);
 
 appExpress.patch('/UserData', verifyToken, patchUserData);
 

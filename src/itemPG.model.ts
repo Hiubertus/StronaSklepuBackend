@@ -73,7 +73,55 @@ export async function addReview(req: Request, res: Response) {
     }
 }
 export async function patchReview(req: Request, res: Response) {
+    const client: PoolClient = await pool.connect();
+    const { item_id, text, rate, date } = req.body;
+    const { user_id } = res.locals.token; // Dostęp do zdekodowanego tokena z res.locals
 
+    if (!item_id || !rate || !date) {
+        return res.status(400).json({ error: "Nie ma wszystkich danych" });
+    }
+
+    if (text.length > 1500) {
+        return res.status(400).json({ error: "Recenzja jest za długa. Maksymalna długość to 1500 znaków." });
+    }
+
+    try {
+        await client.query('BEGIN');
+
+        const reviewExistsResult: QueryResult = await client.query(
+            'SELECT 1 FROM reviews WHERE user_id = $1 AND item_id = $2',
+            [user_id, item_id]
+        );
+
+        if (reviewExistsResult.rowCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Recenzja nie została znaleziona' });
+        }
+
+        await client.query(
+            `UPDATE reviews 
+             SET text = $3, rate = $4, date = $5
+             WHERE user_id = $1 AND item_id = $2`,
+            [user_id, item_id, text, rate, date]
+        );
+
+        await client.query(
+            `UPDATE items 
+             SET rating = (SELECT AVG(rate) FROM reviews WHERE item_id = $1),
+                 review_amount = (SELECT COUNT(*) FROM reviews WHERE item_id = $1)
+             WHERE item_id = $1`,
+            [item_id]
+        );
+
+        await client.query('COMMIT');
+        return res.status(200).json({ message: "Recenzja została zaktualizowana poprawnie" });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Błąd podczas aktualizowania recenzji:', err);
+        return res.status(500).json({ error: 'Wystąpił błąd podczas aktualizowania recenzji' });
+    } finally {
+        client.release();
+    }
 }
 export async function deleteReview(req: Request, res: Response) {
     const item_id: number = Number(req.query.item_id);
