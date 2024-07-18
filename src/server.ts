@@ -3,20 +3,24 @@ import bodyParser from 'body-parser';
 import cors from 'cors'
 
 import {
-    // getItemReviews,
-    // getUserReview,
     getItems,
+    getItem
+} from "./itemPG.model.js";
+
+import {
     addReview,
     deleteReview,
-    getItemReviews, getItem, patchReview
-} from "./itemPG.model.js";
+    getItemReviews,
+    patchReview
+} from "./reviewPG.model.js"
 
 import {
     registerUser,
     loginUser,
     deleteUser,
     patchUserPassword,
-    patchUserData, getUser
+    patchUserData,
+    getUser
 } from "./userPG.model.js";
 
 import {checkToken, verifyToken} from "./server.functions.js";
