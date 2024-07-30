@@ -23,15 +23,24 @@ import {
     getUser
 } from "./userPG.model.js";
 
-import {checkToken, verifyToken} from "./server.functions.js";
-import {getOrder, getOrders, postOrder} from "./orderPG.model.js";
+import {
+    checkToken,
+    verifyToken
+} from "./server.functions.js";
+import {
+    getOrder,
+    getOrders,
+    postOrder
+} from "./orderPG.model.js";
+import {
+    getStatuses
+} from "./statusesPG.model.js";
 
 const appExpress = express()
 const port = 3000;
 
 appExpress.use(bodyParser.json());
 appExpress.use(cors());
-
 
 //Get Requests
 appExpress.get('/Item', getItem);
@@ -45,6 +54,8 @@ appExpress.get('/User', verifyToken, getUser)
 appExpress.get('/Order', verifyToken, getOrder);
 
 appExpress.get('/Orders', verifyToken, getOrders);
+
+appExpress.get('/Statuses', verifyToken, getStatuses)
 
 //POST requests
 appExpress.post('/registerUser', registerUser);

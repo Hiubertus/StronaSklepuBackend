@@ -1,7 +1,7 @@
 import pool from "./database.model.js";
 
 import {Response, Request} from "express";
-import {Item, Order, Statuses} from "./interfaces.js";
+import {Item, Order} from "./interfaces.js";
 import {validateCity, validateName, validatePayment, validateStreet, validateSurname} from "./server.functions.js";
 
 
