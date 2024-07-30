@@ -8,7 +8,7 @@ import {
 } from "./itemPG.model.js";
 
 import {
-    addReview,
+    postReview,
     deleteReview,
     getItemReviews,
     patchReview
@@ -24,6 +24,7 @@ import {
 } from "./userPG.model.js";
 
 import {checkToken, verifyToken} from "./server.functions.js";
+import {getOrder, getOrders, postOrder} from "./orderPG.model.js";
 
 const appExpress = express()
 const port = 3000;
@@ -31,6 +32,8 @@ const port = 3000;
 appExpress.use(bodyParser.json());
 appExpress.use(cors());
 
+
+//Get Requests
 appExpress.get('/Item', getItem);
 
 appExpress.get('/Items', getItems);
@@ -39,16 +42,25 @@ appExpress.get('/ItemReviews', checkToken, getItemReviews);
 
 appExpress.get('/User', verifyToken, getUser)
 
+appExpress.get('/Order', verifyToken, getOrder);
+
+appExpress.get('/Orders', verifyToken, getOrders);
+
+//POST requests
 appExpress.post('/registerUser', registerUser);
 
 appExpress.post('/loginUser', loginUser);
 
-appExpress.post('/Review', verifyToken, addReview);
+appExpress.post('/Review', verifyToken, postReview);
 
+appExpress.post('/Order', verifyToken, postOrder);
+
+//DELETE Requests
 appExpress.delete("/Review", verifyToken, deleteReview)
 
 appExpress.delete('/User', verifyToken, deleteUser);
 
+//PATCH Requests
 appExpress.patch('/Review', verifyToken, patchReview);
 
 appExpress.patch('/UserData', verifyToken, patchUserData);
