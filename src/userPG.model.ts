@@ -1,7 +1,7 @@
 import pool from './database.model.js';
+
 import {Request, Response} from 'express';
 import bcrypt from 'bcrypt';
-import {PoolClient, QueryResult} from "pg";
 import jwt from "jsonwebtoken";
 
 import {jwtSecret} from "./database.model.js";
@@ -11,10 +11,10 @@ import {User} from "./interfaces.js";
 export const getUser = async (req: Request, res: Response) => {
     const {user_id} = res.locals.token;
 
-    const client: PoolClient = await pool.connect();
+    const client = await pool.connect();
 
     try {
-        const userResult: QueryResult<any> = await client.query(
+        const userResult = await client.query(
             'SELECT * FROM users WHERE user_id = $1',
             [user_id]
         );
@@ -203,7 +203,7 @@ export async function loginUser(req: Request, res: Response) {
     const client = await pool.connect();
     try {
         // Sprawdzenie, czy użytkownik istnieje w bazie danych
-        const result: QueryResult = await client.query(
+        const result = await client.query(
             'SELECT * FROM users WHERE email = $1',
             [email]
         );

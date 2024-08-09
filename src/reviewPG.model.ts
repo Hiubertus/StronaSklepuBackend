@@ -1,6 +1,6 @@
-import {Request, Response} from "express";
-import {PoolClient, QueryResult} from "pg";
 import pool from "./database.model.js";
+
+import {Request, Response} from "express";
 import {Review} from "./interfaces.js";
 
 
@@ -135,7 +135,7 @@ export async function deleteReview(req: Request, res: Response) {
         );
 
         // Pobranie aktualnej średniej oceny oraz ilości recenzji dla danego przedmiotu
-        const itemResult: QueryResult<any> = await client.query(
+        const itemResult = await client.query(
             'SELECT rating, review_amount FROM items WHERE item_id = $1',
             [item_id]
         );
